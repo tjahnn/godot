@@ -47,13 +47,14 @@ class MeshStorage : public RendererMeshStorage {
 private:
 	static MeshStorage *singleton;
 
-	mutable RID_Owner<DummyMesh> mesh_owner;
+	// Meshes are created from loader threads in headless runs too.
+	mutable RID_Owner<DummyMesh, true> mesh_owner;
 
 	struct DummyMultiMesh {
 		PackedFloat32Array buffer;
 	};
 
-	mutable RID_Owner<DummyMultiMesh> multimesh_owner;
+	mutable RID_Owner<DummyMultiMesh, true> multimesh_owner;
 
 public:
 	static MeshStorage *get_singleton() { return singleton; }

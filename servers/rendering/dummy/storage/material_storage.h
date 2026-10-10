@@ -50,7 +50,9 @@ private:
 		HashMap<StringName, ShaderLanguage::ShaderNode::Uniform> uniforms;
 	};
 
-	mutable RID_Owner<DummyShader> shader_owner;
+	// Resources are created from loader threads in headless runs too, so these
+	// owners are thread safe like the real renderers' storages.
+	mutable RID_Owner<DummyShader, true> shader_owner;
 
 	ShaderCompiler dummy_compiler;
 	HashSet<RID> dummy_embedded_set;
@@ -60,7 +62,7 @@ private:
 		RID next_pass;
 	};
 
-	mutable RID_Owner<DummyMaterial> material_owner;
+	mutable RID_Owner<DummyMaterial, true> material_owner;
 
 public:
 	static MaterialStorage *get_singleton() { return singleton; }

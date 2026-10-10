@@ -42,7 +42,8 @@ private:
 	struct DummyTexture {
 		Ref<Image> image;
 	};
-	mutable RID_PtrOwner<DummyTexture> texture_owner;
+	// Textures are created from loader threads in headless runs too.
+	mutable RID_PtrOwner<DummyTexture, true> texture_owner;
 
 public:
 	static TextureStorage *get_singleton() { return singleton; }
