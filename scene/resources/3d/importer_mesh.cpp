@@ -567,7 +567,7 @@ void ImporterMesh::optimize_indices() {
 	} \
 	write_array[vert_idx] = transformed_vert;
 
-void ImporterMesh::generate_lods(float p_normal_merge_angle, Array p_bone_transform_array) {
+void ImporterMesh::generate_lods(float p_normal_merge_angle, Array p_bone_transform_array, float p_uv_weight) {
 	if (!SurfaceTool::simplify_scale_func) {
 		return;
 	}
@@ -722,7 +722,7 @@ void ImporterMesh::generate_lods(float p_normal_merge_angle, Array p_bone_transf
 		Vector<float> merged_vertices_f32 = vector3_to_float32_array(merged_vertices_ptr, merged_vertex_count);
 		float scale = SurfaceTool::simplify_scale_func(merged_vertices_f32.ptr(), merged_vertex_count, sizeof(float) * 3);
 
-		const size_t attrib_count = 6; // 3 for normal + 3 for color (if present)
+		const size_t attrib_count = 8; // 3 for normal + 3 for color (if present) + 2 for UV (if weighted)
 
 		float attrib_weights[attrib_count] = {};
 
@@ -732,6 +732,13 @@ void ImporterMesh::generate_lods(float p_normal_merge_angle, Array p_bone_transf
 		// Give some weight to colors but only if present to avoid redundant computations during simplification
 		if (colors_ptr) {
 			attrib_weights[3] = attrib_weights[4] = attrib_weights[5] = 1.0f;
+		}
+
+		// Weigh texture coordinates when asked, so a collapse that would smear a
+		// small UV chart (a face, a marking) costs more than one across flat colour.
+		const bool weigh_uvs = uvs_ptr && p_uv_weight > 0.0f;
+		if (weigh_uvs) {
+			attrib_weights[6] = attrib_weights[7] = p_uv_weight;
 		}
 
 		LocalVector<float> merged_attribs;
@@ -745,12 +752,17 @@ void ImporterMesh::generate_lods(float p_normal_merge_angle, Array p_bone_transf
 			merged_attribs_ptr[j * attrib_count + 1] = merged_normals_ptr[j].y;
 			merged_attribs_ptr[j * attrib_count + 2] = merged_normals_ptr[j].z;
 
-			if (colors_ptr) {
-				unsigned int rj = vertex_inverse_remap[j];
+			unsigned int rj = vertex_inverse_remap[j];
 
+			if (colors_ptr) {
 				merged_attribs_ptr[j * attrib_count + 3] = colors_ptr[rj].r;
 				merged_attribs_ptr[j * attrib_count + 4] = colors_ptr[rj].g;
 				merged_attribs_ptr[j * attrib_count + 5] = colors_ptr[rj].b;
+			}
+
+			if (weigh_uvs) {
+				merged_attribs_ptr[j * attrib_count + 6] = uvs_ptr[rj].x;
+				merged_attribs_ptr[j * attrib_count + 7] = uvs_ptr[rj].y;
 			}
 		}
 
@@ -847,9 +859,9 @@ void ImporterMesh::generate_lods(float p_normal_merge_angle, Array p_bone_transf
 	}
 }
 
-void ImporterMesh::_generate_lods_bind(float p_normal_merge_angle, float p_normal_split_angle, Array p_skin_pose_transform_array) {
+void ImporterMesh::_generate_lods_bind(float p_normal_merge_angle, float p_normal_split_angle, Array p_skin_pose_transform_array, float p_uv_weight) {
 	// p_normal_split_angle is unused, but kept for compatibility
-	generate_lods(p_normal_merge_angle, p_skin_pose_transform_array);
+	generate_lods(p_normal_merge_angle, p_skin_pose_transform_array, p_uv_weight);
 }
 
 bool ImporterMesh::has_mesh() const {
@@ -1573,7 +1585,7 @@ void ImporterMesh::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_surface_name", "surface_idx", "name"), &ImporterMesh::set_surface_name);
 	ClassDB::bind_method(D_METHOD("set_surface_material", "surface_idx", "material"), &ImporterMesh::set_surface_material);
 
-	ClassDB::bind_method(D_METHOD("generate_lods", "normal_merge_angle", "normal_split_angle", "bone_transform_array"), &ImporterMesh::_generate_lods_bind);
+	ClassDB::bind_method(D_METHOD("generate_lods", "normal_merge_angle", "normal_split_angle", "bone_transform_array", "uv_weight"), &ImporterMesh::_generate_lods_bind, DEFVAL(0.0));
 	ClassDB::bind_method(D_METHOD("get_mesh", "base_mesh"), &ImporterMesh::get_mesh, DEFVAL(Ref<ArrayMesh>()));
 	ClassDB::bind_static_method("ImporterMesh", D_METHOD("from_mesh", "mesh"), &ImporterMesh::from_mesh);
 	ClassDB::bind_method(D_METHOD("clear"), &ImporterMesh::clear);

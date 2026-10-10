@@ -54,12 +54,14 @@
 			<param index="0" name="normal_merge_angle" type="float" />
 			<param index="1" name="normal_split_angle" type="float" />
 			<param index="2" name="bone_transform_array" type="Array" />
+			<param index="3" name="uv_weight" type="float" default="0.0" />
 			<description>
 				Generates all lods for this ImporterMesh.
 				[param normal_merge_angle] is in degrees and used in the same way as the importer settings in [code]lods[/code].
 				[param normal_split_angle] is not used and only remains for compatibility with older versions of the API.
 				The number of generated lods can be accessed using [method get_surface_lod_count], and each LOD is available in [method get_surface_lod_size] and [method get_surface_lod_indices].
 				[param bone_transform_array] is an [Array] which can be either empty or contain [Transform3D]s which, for each of the mesh's bone IDs, will apply mesh skinning when generating the LOD mesh variations. This is usually used to account for discrepancies in scale between the mesh itself and its skinning data.
+				[param uv_weight], when greater than zero, also counts changes of the first UV channel in the simplification error (in UV units, scaled by the weight), so that detailed texture charts such as faces or markings are kept ahead of flat-coloured geometry. [code]0.0[/code] ignores UVs as before.
 			</description>
 		</method>
 		<method name="get_blend_shape_count" qualifiers="const">
