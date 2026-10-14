@@ -44,6 +44,8 @@ class DisplayServerAndroid : public DisplayServer {
 	GDSOFTCLASS(DisplayServerAndroid, DisplayServer);
 
 	String rendering_driver;
+	// The GL surface's vsync mode; the Java render view owns the swap interval.
+	DisplayServerEnums::VSyncMode gl_vsync_mode = DisplayServerEnums::VSYNC_ENABLED;
 
 	// https://developer.android.com/reference/android/view/PointerIcon
 	// mapping between Godot's cursor shape to Android's'

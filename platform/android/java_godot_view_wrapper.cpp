@@ -44,6 +44,7 @@ GodotJavaViewWrapper::GodotJavaViewWrapper(jobject godot_view) {
 
 	_configure_pointer_icon = env->GetMethodID(_cls, "configurePointerIcon", "(ILjava/lang/String;FF)V");
 	_set_pointer_icon = env->GetMethodID(_cls, "setPointerIcon", "(I)V");
+	_set_swap_interval = env->GetMethodID(_cls, "setSwapInterval", "(I)V");
 
 	int android_device_api_level = android_get_device_api_level();
 	if (android_device_api_level >= __ANDROID_API_O__) {
@@ -106,6 +107,15 @@ void GodotJavaViewWrapper::set_pointer_icon(int pointer_type) {
 		ERR_FAIL_NULL(env);
 
 		env->CallVoidMethod(_godot_view, _set_pointer_icon, pointer_type);
+	}
+}
+
+void GodotJavaViewWrapper::set_swap_interval(int interval) {
+	if (_set_swap_interval != nullptr) {
+		JNIEnv *env = get_jni_env();
+		ERR_FAIL_NULL(env);
+
+		env->CallVoidMethod(_godot_view, _set_swap_interval, interval);
 	}
 }
 

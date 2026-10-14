@@ -48,6 +48,7 @@ private:
 
 	jmethodID _configure_pointer_icon = nullptr;
 	jmethodID _set_pointer_icon = nullptr;
+	jmethodID _set_swap_interval = nullptr;
 
 public:
 	GodotJavaViewWrapper(jobject godot_view);
@@ -60,6 +61,9 @@ public:
 
 	void configure_pointer_icon(int pointer_type, const String &image_path, const Vector2 &p_hotspot);
 	void set_pointer_icon(int pointer_type);
+
+	// The GL surface's buffer swap interval (1 = vsync, 0 = free running).
+	void set_swap_interval(int interval);
 
 	~GodotJavaViewWrapper();
 };

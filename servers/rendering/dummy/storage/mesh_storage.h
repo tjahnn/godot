@@ -117,10 +117,28 @@ public:
 		return m->blend_shape_mode;
 	}
 
-	virtual void mesh_surface_update_vertex_region(RID p_mesh, int p_surface, int p_offset, const Vector<uint8_t> &p_data) override {}
-	virtual void mesh_surface_update_attribute_region(RID p_mesh, int p_surface, int p_offset, const Vector<uint8_t> &p_data) override {}
-	virtual void mesh_surface_update_skin_region(RID p_mesh, int p_surface, int p_offset, const Vector<uint8_t> &p_data) override {}
-	virtual void mesh_surface_update_index_region(RID p_mesh, int p_surface, int p_offset, const Vector<uint8_t> &p_data) override {}
+	// The stored bytes are what mesh_get_surface hands back, so a headless run
+	// reads the same vertices a renderer would after a partial update.
+	void _update_region(RID p_mesh, int p_surface, int p_offset, const Vector<uint8_t> &p_data, Vector<uint8_t> RenderingServerTypes::SurfaceData::*p_member) {
+		DummyMesh *m = mesh_owner.get_or_null(p_mesh);
+		ERR_FAIL_NULL(m);
+		ERR_FAIL_UNSIGNED_INDEX((uint32_t)p_surface, m->surfaces.size());
+		Vector<uint8_t> &bytes = m->surfaces.write[p_surface].*p_member;
+		ERR_FAIL_COND(p_offset < 0 || p_offset + p_data.size() > bytes.size());
+		memcpy(bytes.ptrw() + p_offset, p_data.ptr(), p_data.size());
+	}
+	virtual void mesh_surface_update_vertex_region(RID p_mesh, int p_surface, int p_offset, const Vector<uint8_t> &p_data) override {
+		_update_region(p_mesh, p_surface, p_offset, p_data, &RenderingServerTypes::SurfaceData::vertex_data);
+	}
+	virtual void mesh_surface_update_attribute_region(RID p_mesh, int p_surface, int p_offset, const Vector<uint8_t> &p_data) override {
+		_update_region(p_mesh, p_surface, p_offset, p_data, &RenderingServerTypes::SurfaceData::attribute_data);
+	}
+	virtual void mesh_surface_update_skin_region(RID p_mesh, int p_surface, int p_offset, const Vector<uint8_t> &p_data) override {
+		_update_region(p_mesh, p_surface, p_offset, p_data, &RenderingServerTypes::SurfaceData::skin_data);
+	}
+	virtual void mesh_surface_update_index_region(RID p_mesh, int p_surface, int p_offset, const Vector<uint8_t> &p_data) override {
+		_update_region(p_mesh, p_surface, p_offset, p_data, &RenderingServerTypes::SurfaceData::index_data);
+	}
 
 	virtual void mesh_surface_set_material(RID p_mesh, int p_surface, RID p_material) override {
 		DummyMesh *m = mesh_owner.get_or_null(p_mesh);
