@@ -567,7 +567,7 @@ void ImporterMesh::optimize_indices() {
 	} \
 	write_array[vert_idx] = transformed_vert;
 
-void ImporterMesh::generate_lods(float p_normal_merge_angle, Array p_bone_transform_array, float p_uv_weight, float p_far_lod_ratio) {
+void ImporterMesh::generate_lods(float p_normal_merge_angle, Array p_bone_transform_array, float p_uv_weight) {
 	if (!SurfaceTool::simplify_scale_func) {
 		return;
 	}
@@ -855,47 +855,13 @@ void ImporterMesh::generate_lods(float p_normal_merge_angle, Array p_bone_transf
 			print_verbose("  LOD " + itos(surfaces.write[i].lods.size()) + ": " + itos(new_index_count / 3) + " triangles, error " + rtos(current_error) + " (step error " + rtos(step_error) + ")");
 		}
 
-		// Seam-heavy meshes stall the attribute-aware chain far above what a distant
-		// body needs. One topology-free level then gives the renderer something to
-		// switch to once the error fits the screen threshold.
-		if (p_far_lod_ratio > 0.0f && SurfaceTool::simplify_sloppy_func) {
-			unsigned int far_target = MAX((unsigned int)((index_count / 3) * p_far_lod_ratio) * 3, min_target_indices);
-			if (current_indices.size() > far_target * 1.25f) {
-				PackedInt32Array far_indices;
-				far_indices.resize(current_indices.size());
-				float far_error = 0.0f;
-				size_t far_count = SurfaceTool::simplify_sloppy_func(
-						(unsigned int *)far_indices.ptrw(),
-						(const uint32_t *)current_indices.ptr(), current_indices.size(),
-						merged_vertices_f32.ptr(), merged_vertex_count,
-						sizeof(float) * 3,
-						nullptr,
-						far_target,
-						max_mesh_error,
-						&far_error);
-				if (far_count >= min_target_indices && far_count < current_indices.size() * 0.75f) {
-					far_indices.resize(far_count);
-					int *ptrw = far_indices.ptrw();
-					for (unsigned int j = 0; j < far_count; j++) {
-						ptrw[j] = vertex_inverse_remap[ptrw[j]];
-					}
-					current_error = MAX(current_error * 1.5f, far_error);
-					Surface::LOD lod;
-					lod.distance = MAX(current_error * scale, CMP_EPSILON2);
-					lod.indices = far_indices;
-					surfaces.write[i].lods.push_back(lod);
-					print_verbose("  LOD " + itos(surfaces.write[i].lods.size()) + " (far, sloppy): " + itos(far_count / 3) + " triangles, error " + rtos(current_error));
-				}
-			}
-		}
-
 		surfaces.write[i].lods.sort_custom<Surface::LODComparator>();
 	}
 }
 
-void ImporterMesh::_generate_lods_bind(float p_normal_merge_angle, float p_normal_split_angle, Array p_skin_pose_transform_array, float p_uv_weight, float p_far_lod_ratio) {
+void ImporterMesh::_generate_lods_bind(float p_normal_merge_angle, float p_normal_split_angle, Array p_skin_pose_transform_array, float p_uv_weight) {
 	// p_normal_split_angle is unused, but kept for compatibility
-	generate_lods(p_normal_merge_angle, p_skin_pose_transform_array, p_uv_weight, p_far_lod_ratio);
+	generate_lods(p_normal_merge_angle, p_skin_pose_transform_array, p_uv_weight);
 }
 
 bool ImporterMesh::has_mesh() const {
@@ -1619,7 +1585,7 @@ void ImporterMesh::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_surface_name", "surface_idx", "name"), &ImporterMesh::set_surface_name);
 	ClassDB::bind_method(D_METHOD("set_surface_material", "surface_idx", "material"), &ImporterMesh::set_surface_material);
 
-	ClassDB::bind_method(D_METHOD("generate_lods", "normal_merge_angle", "normal_split_angle", "bone_transform_array", "uv_weight", "far_lod_ratio"), &ImporterMesh::_generate_lods_bind, DEFVAL(0.0), DEFVAL(0.0));
+	ClassDB::bind_method(D_METHOD("generate_lods", "normal_merge_angle", "normal_split_angle", "bone_transform_array", "uv_weight"), &ImporterMesh::_generate_lods_bind, DEFVAL(0.0));
 	ClassDB::bind_method(D_METHOD("get_mesh", "base_mesh"), &ImporterMesh::get_mesh, DEFVAL(Ref<ArrayMesh>()));
 	ClassDB::bind_static_method("ImporterMesh", D_METHOD("from_mesh", "mesh"), &ImporterMesh::from_mesh);
 	ClassDB::bind_method(D_METHOD("clear"), &ImporterMesh::clear);
