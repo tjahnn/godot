@@ -107,6 +107,8 @@ public:
 	static SimplifyWithAttribFunc simplify_with_attrib_func;
 	typedef float (*SimplifyScaleFunc)(const float *vertex_positions, size_t vertex_count, size_t vertex_positions_stride);
 	static SimplifyScaleFunc simplify_scale_func;
+	typedef size_t (*SimplifySloppyFunc)(unsigned int *destination, const unsigned int *indices, size_t index_count, const float *vertex_positions, size_t vertex_count, size_t vertex_positions_stride, const unsigned char *vertex_lock, size_t target_index_count, float target_error, float *result_error);
+	static SimplifySloppyFunc simplify_sloppy_func;
 	typedef size_t (*GenerateRemapFunc)(unsigned int *destination, const unsigned int *indices, size_t index_count, const void *vertices, size_t vertex_count, size_t vertex_size);
 	static GenerateRemapFunc generate_remap_func;
 	typedef void (*RemapVertexFunc)(void *destination, const void *vertices, size_t vertex_count, size_t vertex_size, const unsigned int *remap);

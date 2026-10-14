@@ -40,6 +40,7 @@ SurfaceTool::OptimizeVertexFetchRemapFunc SurfaceTool::optimize_vertex_fetch_rem
 SurfaceTool::SimplifyFunc SurfaceTool::simplify_func = nullptr;
 SurfaceTool::SimplifyWithAttribFunc SurfaceTool::simplify_with_attrib_func = nullptr;
 SurfaceTool::SimplifyScaleFunc SurfaceTool::simplify_scale_func = nullptr;
+SurfaceTool::SimplifySloppyFunc SurfaceTool::simplify_sloppy_func = nullptr;
 SurfaceTool::GenerateRemapFunc SurfaceTool::generate_remap_func = nullptr;
 SurfaceTool::RemapVertexFunc SurfaceTool::remap_vertex_func = nullptr;
 SurfaceTool::RemapIndexFunc SurfaceTool::remap_index_func = nullptr;

@@ -83,7 +83,7 @@ protected:
 	void _set_data(const Dictionary &p_data);
 	Dictionary _get_data() const;
 
-	void _generate_lods_bind(float p_normal_merge_angle, float p_normal_split_angle, Array p_skin_pose_transform_array, float p_uv_weight);
+	void _generate_lods_bind(float p_normal_merge_angle, float p_normal_split_angle, Array p_skin_pose_transform_array, float p_uv_weight, float p_far_lod_ratio);
 
 	static void _bind_methods();
 
@@ -119,7 +119,9 @@ public:
 
 	// p_uv_weight > 0 also weighs texture coordinate changes in the simplification error, so
 	// detailed UV charts (faces, markings) are preserved ahead of flat geometry.
-	void generate_lods(float p_normal_merge_angle, Array p_skin_pose_transform_array, float p_uv_weight = 0.0f);
+	// p_far_lod_ratio > 0 appends a topology-free (sloppy) level of at most that fraction
+	// of the source triangles when the chain stalled above it, e.g. on seam-heavy bodies.
+	void generate_lods(float p_normal_merge_angle, Array p_skin_pose_transform_array, float p_uv_weight = 0.0f, float p_far_lod_ratio = 0.0f);
 
 	void create_shadow_mesh();
 	Ref<ImporterMesh> get_shadow_mesh() const;
