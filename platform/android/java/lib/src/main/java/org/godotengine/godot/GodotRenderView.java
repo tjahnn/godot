@@ -67,4 +67,10 @@ public interface GodotRenderView {
 	 * @return true if pointer capture is supported.
 	 */
 	boolean canCapturePointer();
+
+	/**
+	 * Sets the buffer swap interval of the render surface: 1 waits for the display's
+	 * vsync, 0 presents as soon as a frame is drawn. Only the GL view honors it.
+	 */
+	void setSwapInterval(int interval);
 }

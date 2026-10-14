@@ -34,6 +34,7 @@ import org.godotengine.godot.GodotLib;
 import org.godotengine.godot.plugin.GodotPlugin;
 import org.godotengine.godot.plugin.GodotPluginRegistry;
 
+import android.opengl.EGL14;
 import android.util.Log;
 
 import javax.microedition.khronos.egl.EGLConfig;
@@ -47,15 +48,37 @@ public class GodotRenderer implements GLSurfaceView.Renderer {
 
 	private final GodotPluginRegistry pluginRegistry;
 	private boolean activityJustResumed = false;
+	// The swap interval the display server asked for (1 = vsync, 0 = free running), and
+	// the one the current EGL context has; a new context starts over.
+	private volatile int requestedSwapInterval = 1;
+	private int appliedSwapInterval = -1;
 
 	public GodotRenderer() {
 		this.pluginRegistry = GodotPluginRegistry.getPluginRegistry();
+	}
+
+	/**
+	 * Applied on the render thread before the next frame. Vsync off lets a profiling
+	 * run exceed the display refresh rate, as it does on desktop.
+	 */
+	public void setSwapInterval(int interval) {
+		requestedSwapInterval = interval;
 	}
 
 	public boolean onDrawFrame(GL10 gl) {
 		if (activityJustResumed) {
 			GodotLib.onRendererResumed();
 			activityJustResumed = false;
+		}
+
+		int swapInterval = requestedSwapInterval;
+		if (swapInterval != appliedSwapInterval) {
+			if (EGL14.eglSwapInterval(EGL14.eglGetCurrentDisplay(), swapInterval)) {
+				appliedSwapInterval = swapInterval;
+			} else {
+				Log.w(TAG, "eglSwapInterval(" + swapInterval + ") failed: 0x" + Integer.toHexString(EGL14.eglGetError()));
+				appliedSwapInterval = swapInterval; // Do not retry every frame.
+			}
 		}
 
 		boolean swapBuffers = GodotLib.step();
@@ -80,6 +103,8 @@ public class GodotRenderer implements GLSurfaceView.Renderer {
 	}
 
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+		// A new context has the default interval again.
+		appliedSwapInterval = -1;
 		GodotLib.newcontext(null);
 		for (GodotPlugin plugin : pluginRegistry.getAllPlugins()) {
 			plugin.onGLSurfaceCreated(gl, config);

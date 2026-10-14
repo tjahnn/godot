@@ -833,6 +833,7 @@ DisplayServerAndroid::DisplayServerAndroid(const String &p_rendering_driver, Dis
 #if defined(GLES3_ENABLED)
 	if (rendering_driver == "opengl3") {
 		RasterizerGLES3::make_current(false);
+		window_set_vsync_mode(p_vsync_mode, DisplayServerEnums::MAIN_WINDOW_ID);
 	}
 #endif
 
@@ -980,6 +981,17 @@ void DisplayServerAndroid::window_set_vsync_mode(DisplayServerEnums::VSyncMode p
 #if defined(RD_ENABLED)
 	if (rendering_context_global) {
 		rendering_context_global->window_set_vsync_mode(p_window, p_vsync_mode);
+		return;
+	}
+#endif
+#if defined(GLES3_ENABLED)
+	if (rendering_driver == "opengl3") {
+		// EGL only knows the interval: disabled presents every drawn frame, the
+		// adaptive and mailbox modes fall back to vsync.
+		GodotJavaViewWrapper *view = OS_Android::get_singleton()->get_godot_java()->get_godot_view();
+		ERR_FAIL_NULL(view);
+		gl_vsync_mode = p_vsync_mode == DisplayServerEnums::VSYNC_DISABLED ? DisplayServerEnums::VSYNC_DISABLED : DisplayServerEnums::VSYNC_ENABLED;
+		view->set_swap_interval(gl_vsync_mode == DisplayServerEnums::VSYNC_DISABLED ? 0 : 1);
 	}
 #endif
 }
@@ -988,6 +1000,11 @@ DisplayServerEnums::VSyncMode DisplayServerAndroid::window_get_vsync_mode(Displa
 #if defined(RD_ENABLED)
 	if (rendering_context_global) {
 		return rendering_context_global->window_get_vsync_mode(p_window);
+	}
+#endif
+#if defined(GLES3_ENABLED)
+	if (rendering_driver == "opengl3") {
+		return gl_vsync_mode;
 	}
 #endif
 	return DisplayServerEnums::VSYNC_ENABLED;

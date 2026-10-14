@@ -156,6 +156,11 @@ class GodotVulkanRenderView extends VkSurfaceView implements GodotRenderView {
 		// Pointer capture is not supported on XR devices.
 		return !godot.isXrRuntime() && mInputHandler.canCapturePointer();
 	}
+
+	@Override
+	public void setSwapInterval(int interval) {
+		// The Vulkan swapchain's present mode is set by the rendering context.
+	}
 	@Override
 	public void requestPointerCapture() {
 		if (canCapturePointer()) {

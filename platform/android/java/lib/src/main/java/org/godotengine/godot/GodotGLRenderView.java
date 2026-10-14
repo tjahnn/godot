@@ -240,6 +240,15 @@ class GodotGLRenderView extends GLSurfaceView implements GodotRenderView {
 		return getPointerIcon();
 	}
 
+	/**
+	 * Called from JNI when the display server's vsync mode changes.
+	 */
+	@Keep
+	@Override
+	public void setSwapInterval(int interval) {
+		godotRenderer.setSwapInterval(interval);
+	}
+
 	private void init(XRMode xrMode, boolean translucent, boolean useDebugOpengl) {
 		setPreserveEGLContextOnPause(true);
 		setFocusableInTouchMode(true);
