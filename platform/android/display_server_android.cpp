@@ -880,7 +880,9 @@ DisplayServerAndroid::~DisplayServerAndroid() {
 
 #if defined(RD_ENABLED)
 	memdelete(rendering_device);
+#endif
 
+#ifdef VULKAN_ENABLED
 	free_vulkan_global_context();
 #endif
 }
